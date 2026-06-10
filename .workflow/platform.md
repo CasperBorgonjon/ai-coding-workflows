@@ -53,7 +53,7 @@ disciplined-build deliberately inherits no glossary; the drift checker reads onl
 cache reuse — `repo_for` clones on demand; proven by the verify run.)
 
 ### Scope shipped this session
-Slices #7 and #8. Issue #9 (docs) remains open and `ready-for-agent`.
+Slices #7, #8, and #9 — the full feature.
 - #7: install.sh fetches a pinned shared CONTEXT.md to .workflow/shared/CONTEXT.md.
 - #8: orchestrator (skills/disciplined-build/SKILL.md) step 1 now reads that file as
   the inherited baseline; local CONTEXT.md overrides; sharpened terms written locally.

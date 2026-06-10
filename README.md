@@ -50,6 +50,27 @@ The workflow's dependencies are declared in one place: `skills/disciplined-build
 - **Format:** JSON, because the installer (bash) parses it with python3's stdlib — already a dependency via the validator — so no extra tooling. The file is small enough that JSON's verbosity doesn't hurt auditability.
 - **Consistency:** the manifest is the source of truth. The prose step table in `SKILL.md` is hand-written, and a drift test in `./test.sh` fails whenever the two disagree on step names, order, checkpoint types, or skill names.
 
+## Shared context
+
+A team can share one **glossary** across many repos without standing up any platform. The manifest may declare an optional `sharedContext` source — a separate git repo holding a `CONTEXT.md`, pinned exactly the way skills are:
+
+```json
+"sharedContext": {
+  "source": "https://github.com/your-org/team-glossary",
+  "path": ".",
+  "ref": "<full commit SHA>"
+}
+```
+
+On a **`--project`** install, `install.sh` fetches that `CONTEXT.md` to `.workflow/shared/CONTEXT.md` in the repo, pinned and read-only (with a `.pinned-ref` recording the commit). A bare global install has no project to land it in, so the fetch is skipped cleanly. A manifest with no `sharedContext` block behaves exactly as before.
+
+The grilling step (step 1) reads that file as the team's **inherited baseline** vocabulary and challenges your terms against it. Two rules keep it predictable:
+
+- **Local overrides shared.** Your repo's own `CONTEXT.md` wins over the shared baseline on any term they both define — project-specific language beats the company-wide default.
+- **Promotion is manual.** Sharpening a term during grilling updates your *local* `CONTEXT.md`; the fetched shared copy is never edited (the next install would overwrite it). To add a term to the team glossary, open a PR to the shared repo. There is deliberately no auto-propagation — that would reintroduce the surprise "latest" changes that pinning exists to prevent.
+
+Why a pinned git repo rather than a hosted platform with a web UI: see [ADR-0001](docs/adr/0001-shared-context-is-a-pinned-git-ref-not-a-platform.md).
+
 ## Use with Claude Code
 
 Claude Code auto-discovers skills from `~/.claude/skills` (global) and `./.claude/skills` (per-project), so after install there is nothing to configure. Start a feature by asking to "build X using disciplined-build", or just describe a new feature — the skill description triggers on that.
