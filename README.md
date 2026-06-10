@@ -116,4 +116,6 @@ Exit code 0 means the record is well-formed; violations are listed otherwise. Ru
 
 ## Status
 
-v1 — testing with my own team. Success signal: do teammates reach for it *again, unprompted*?
+**v1 — final.** This is the finished version of the workflow: a single orchestrator skill (`disciplined-build`) that *composes and pins* a set of professional skills via its [manifest](#workflow-manifest) rather than re-authoring them. It is feature-complete and not under active feature development.
+
+The next gate is **adoption, not features** — the workflow only grows again when a real, discipline-valuing team picks it up and reaches for it *unprompted*. Why building deliberately stopped here, and the one thing that would reopen it, is recorded in [ADR-0002](docs/adr/0002-v1-is-done-the-next-gate-is-adoption-not-features.md).
