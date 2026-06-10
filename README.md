@@ -31,6 +31,13 @@ Progress is shown live as a map, and recorded in `.workflow/<feature>.md` — co
 ./install.sh --project  # installs into ./.claude/skills (this repo only)
 ```
 
+## Workflow manifest
+
+The workflow's dependencies are declared in one place: `skills/disciplined-build/manifest.json`. It lists the five steps in order and, for each, the checkpoint type (`hard` | `soft`) and the professional skills the step drives — each with its source repo, path, and a pinned commit SHA (the upstream publishes no tags, so a full SHA is the only real pin). A teammate can audit exactly which skill versions the team runs by reading this one file; bump a version by editing its `ref`.
+
+- **Format:** JSON, because the installer (bash) parses it with python3's stdlib — already a dependency via the validator — so no extra tooling. The file is small enough that JSON's verbosity doesn't hurt auditability.
+- **Consistency:** the manifest is the source of truth. The prose step table in `SKILL.md` is hand-written, and a drift test in `./test.sh` fails whenever the two disagree on step names, order, checkpoint types, or skill names.
+
 ## Use with Claude Code
 
 Claude Code auto-discovers skills from `~/.claude/skills` (global) and `./.claude/skills` (per-project), so after install there is nothing to configure. Start a feature by asking to "build X using disciplined-build", or just describe a new feature — the skill description triggers on that.

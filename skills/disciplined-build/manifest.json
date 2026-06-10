@@ -1,0 +1,78 @@
+{
+  "workflow": "disciplined-build",
+  "manifestVersion": 1,
+  "steps": [
+    {
+      "step": 1,
+      "name": "Grill the idea",
+      "checkpoint": "hard",
+      "skills": [
+        {
+          "name": "grill-me",
+          "source": "https://github.com/mattpocock/skills",
+          "path": "skills/productivity/grill-me",
+          "ref": "e3d8b735ef92ec9554b07f11f408089d81289eed",
+          "use": "no codebase yet"
+        },
+        {
+          "name": "grill-with-docs",
+          "source": "https://github.com/mattpocock/skills",
+          "path": "skills/engineering/grill-with-docs",
+          "ref": "e3d8b735ef92ec9554b07f11f408089d81289eed",
+          "use": "existing codebase"
+        }
+      ]
+    },
+    {
+      "step": 2,
+      "name": "Produce PRD",
+      "checkpoint": "hard",
+      "skills": [
+        {
+          "name": "to-prd",
+          "source": "https://github.com/mattpocock/skills",
+          "path": "skills/engineering/to-prd",
+          "ref": "e3d8b735ef92ec9554b07f11f408089d81289eed"
+        }
+      ]
+    },
+    {
+      "step": 3,
+      "name": "Break into issues",
+      "checkpoint": "soft",
+      "skills": [
+        {
+          "name": "to-issues",
+          "source": "https://github.com/mattpocock/skills",
+          "path": "skills/engineering/to-issues",
+          "ref": "e3d8b735ef92ec9554b07f11f408089d81289eed"
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "name": "Implement one slice",
+      "checkpoint": "hard",
+      "skills": []
+    },
+    {
+      "step": 5,
+      "name": "Review + verify",
+      "checkpoint": "hard",
+      "skills": [
+        {
+          "name": "review",
+          "source": "https://github.com/mattpocock/skills",
+          "path": "skills/in-progress/review",
+          "ref": "e3d8b735ef92ec9554b07f11f408089d81289eed"
+        },
+        {
+          "name": "improve-codebase-architecture",
+          "source": "https://github.com/mattpocock/skills",
+          "path": "skills/engineering/improve-codebase-architecture",
+          "ref": "e3d8b735ef92ec9554b07f11f408089d81289eed"
+        }
+      ]
+    }
+  ]
+}

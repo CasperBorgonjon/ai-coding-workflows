@@ -17,7 +17,7 @@ You are **daylight, not a cop.** You do not block anyone. You make the process â
 | 2 | Produce PRD | `to-prd` | **HARD** |
 | 3 | Break into issues | `to-issues` | soft |
 | 4 | Implement one slice | (implement, human reviews) | **HARD** |
-| 5 | Review + verify | `code-review` / `verify` | **HARD** |
+| 5 | Review + verify | `review` / `improve-codebase-architecture` | **HARD** |
 
 If a referenced skill isn't installed, perform the equivalent work yourself and note it.
 
