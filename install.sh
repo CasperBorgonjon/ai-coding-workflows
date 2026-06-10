@@ -18,9 +18,12 @@ if [[ "${1:-}" == "--project" ]]; then
   DEST="$(pwd)/.claude/skills"
 fi
 
-for tool in git python3 tar; do
+for tool in git tar; do
   command -v "$tool" >/dev/null || { echo "error: '$tool' is required" >&2; exit 1; }
 done
+# Windows installs often expose Python as 'python' (Git Bash), not 'python3'
+PYTHON="$(command -v python3 || command -v python || true)"
+[[ -n "$PYTHON" ]] || { echo "error: python3 (or python) is required" >&2; exit 1; }
 [[ -f "$MANIFEST" ]] || { echo "error: manifest not found at $MANIFEST" >&2; exit 1; }
 
 CACHE="$(mktemp -d)"
@@ -32,7 +35,7 @@ cp -R "$ROOT/skills/." "$DEST/"
 
 # --- 2. every manifest-declared professional skill, pinned ---
 # Lines of: name <TAB> source <TAB> path <TAB> ref  (deduped by name)
-DEPS="$(python3 - "$MANIFEST" <<'PY'
+DEPS="$("$PYTHON" - "$MANIFEST" <<'PY'
 import json, sys
 data = json.load(open(sys.argv[1]))
 seen = set()
