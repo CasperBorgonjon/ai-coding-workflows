@@ -30,6 +30,15 @@ Install it by running, from the ai-coding-workflows repo:
 
 Then wait. Resume the step only once the skill is available.
 
+## Shared context baseline (step 1)
+
+A team can share one glossary across repos: a `sharedContext` source declared in `manifest.json` and fetched by `install.sh` to `.workflow/shared/CONTEXT.md` (pinned, read-only). When you run **step 1 (Grill the idea)**, check whether that file exists:
+
+- **If it exists**, tell the grilling skill to read it as the team's **inherited baseline** vocabulary, *in addition to* the project's own `CONTEXT.md`. Challenge the human's terms against both.
+- **Local overrides shared.** Where the project's local `CONTEXT.md` and the shared baseline define the same term differently, the **local** definition wins — project-specific language beats the company-wide default. Say so when the conflict surfaces.
+- **Sharpened terms go local.** When grilling resolves or sharpens a term, write it to the project's **local** `CONTEXT.md` — never to `.workflow/shared/CONTEXT.md`, which is a pinned copy that the next install overwrites. Promoting a term to the shared glossary is a deliberate, separate PR to the shared repo.
+- **If it doesn't exist**, behave exactly as before — there is no shared baseline to read.
+
 ## On invocation
 
 1. Ask the human for the **feature/task name** if not obvious. Make a slug from it (e.g. `auth-magic-link`).
