@@ -105,6 +105,29 @@ class TestProjectInstall(unittest.TestCase):
             )
 
 
+@unittest.skipIf(SKIP_NETWORK, "DW_SKIP_NETWORK_TESTS=1")
+class TestBootstrap(unittest.TestCase):
+    """bootstrap.sh clones the repo itself, then defers to install.sh.
+
+    DW_REPO points the clone at this local repo, so the test exercises the
+    committed state without depending on what's pushed to GitHub.
+    """
+
+    def test_bootstrap_installs_without_a_local_clone(self):
+        with tempfile.TemporaryDirectory(prefix="dw-home-") as home, \
+                tempfile.TemporaryDirectory(prefix="dw-cwd-") as cwd:
+            env = dict(os.environ, HOME=home, DW_REPO=str(ROOT))
+            result = subprocess.run(
+                ["bash", str(ROOT / "bootstrap.sh")],
+                capture_output=True,
+                text=True,
+                env=env,
+                cwd=cwd,  # an empty dir: proves no pre-existing clone needed
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            assert_full_install(self, Path(home) / ".claude" / "skills")
+
+
 class TestUnreachableSource(unittest.TestCase):
     """Offline: a doctored manifest with a dead source must fail loudly."""
 

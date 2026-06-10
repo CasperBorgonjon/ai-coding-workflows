@@ -26,6 +26,16 @@ Progress is shown live as a map, and recorded in `.workflow/<feature>.md` — co
 
 ## Install
 
+No clone needed — one line (requires `git` and `python3`):
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/CasperBorgonjon/ai-coding-workflows/main/bootstrap.sh | bash
+```
+
+Add `-s -- --project` after `bash` to install into `./.claude/skills` (current repo only) instead of `~/.claude/skills` (global).
+
+Or from a clone:
+
 ```sh
 ./install.sh            # installs into ~/.claude/skills (global)
 ./install.sh --project  # installs into ./.claude/skills (this repo only)
