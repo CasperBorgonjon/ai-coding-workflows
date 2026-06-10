@@ -31,9 +31,39 @@ Progress is shown live as a map, and recorded in `.workflow/<feature>.md` — co
 ./install.sh --project  # installs into ./.claude/skills (this repo only)
 ```
 
-Then in Claude Code, start a feature with the `disciplined-build` skill (e.g. ask to "build X using disciplined-build").
+## Use with Claude Code
 
-> The skill is plain markdown. It also works with other LLMs — paste `skills/disciplined-build/SKILL.md` into the context; only the loading mechanism differs.
+Claude Code auto-discovers skills from `~/.claude/skills` (global) and `./.claude/skills` (per-project), so after install there is nothing to configure. Start a feature by asking to "build X using disciplined-build", or just describe a new feature — the skill description triggers on that.
+
+## Use with other LLMs
+
+The workflow is plain, portable markdown — there is no vendor-specific code in it. For any tool that doesn't auto-discover skills:
+
+1. Paste or attach `skills/disciplined-build/SKILL.md` into the conversation context.
+2. Tell the model to act as the orchestrator it describes.
+
+Only the loading mechanism differs per tool; the workflow content is identical everywhere.
+
+## Uninstall
+
+Trying this should cost five minutes; leaving should cost five seconds. One command, depending on how you installed:
+
+```sh
+rm -rf ~/.claude/skills/disciplined-build    # global install
+rm -rf ./.claude/skills/disciplined-build    # --project install
+```
+
+State files already committed under `.workflow/` are part of your repo's history and are deliberately untouched — they remain readable without the skill installed.
+
+## Validate a state file
+
+A deterministic checker (no LLM, no network) verifies that a state file isn't lying — every `done` step has a real artifact, every skip has a recorded reason:
+
+```sh
+./bin/validate-state-file .workflow/<feature>.md
+```
+
+Exit code 0 means the record is well-formed; violations are listed otherwise. Run `./test.sh` for the project's test suite.
 
 ## Status
 
