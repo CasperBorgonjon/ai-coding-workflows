@@ -45,7 +45,6 @@ for step in data["steps"]:
 PY
 )"
 
-declare -A REPO_DIR=()
 repo_for() {  # clone each unique source once into the cache
   local source="$1" key dir
   key="$(printf '%s' "$source" | cksum | cut -d' ' -f1)"
