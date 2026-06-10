@@ -114,6 +114,21 @@ class TestManifestWellFormed(unittest.TestCase):
                     "(upstream has no tags; 'main' is not a pin)",
                 )
 
+    def test_every_crosscutting_skill_fully_pinned(self):
+        data = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        for skill in data.get("crossCutting", []):
+            for field in ("name", "source", "path", "ref"):
+                self.assertTrue(
+                    skill.get(field),
+                    f"cross-cutting skill missing '{field}'",
+                )
+            self.assertRegex(
+                skill["ref"],
+                r"^[0-9a-f]{40}$",
+                f"cross-cutting skill '{skill['name']}': ref must be a full "
+                "commit SHA (upstream has no tags; 'main' is not a pin)",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

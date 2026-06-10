@@ -17,6 +17,14 @@ A single professional capability a workflow drives (e.g. grilling, producing a
 PRD). Authored upstream; referenced and pinned, never re-authored here.
 _Avoid_: plugin, command
 
+**Cross-cutting helper**:
+A skill that doesn't belong to a single step — reached for in any phase when the
+situation calls (prototyping a design, diagnosing a bug, zooming out for
+context), then left behind to resume the current step. Declared and pinned like
+any skill, but listed apart from the ordered steps; using one never advances the
+workflow or clears a checkpoint.
+_Avoid_: utility, tool, plugin
+
 **Orchestrator**:
 The thin skill that sequences a workflow's steps, renders the progress map, and
 enforces checkpoints. Owns no step logic — it composes skills.

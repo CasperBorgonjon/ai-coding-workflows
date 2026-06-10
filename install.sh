@@ -36,17 +36,18 @@ mkdir -p "$DEST"
 cp -R "$ROOT/skills/." "$DEST/"
 
 # --- 2. every manifest-declared professional skill, pinned ---
-# Lines of: name <TAB> source <TAB> path <TAB> ref  (deduped by name)
+# Both the per-step skills and the top-level cross-cutting helpers (reached for
+# in any phase). Lines of: name <TAB> source <TAB> path <TAB> ref (deduped by name)
 DEPS="$("$PYTHON" - "$MANIFEST" <<'PY'
 import json, sys
 data = json.load(open(sys.argv[1]))
 seen = set()
-for step in data["steps"]:
-    for s in step["skills"]:
-        if s["name"] in seen:
-            continue
-        seen.add(s["name"])
-        print("\t".join((s["name"], s["source"], s["path"], s["ref"])))
+step_skills = [s for step in data["steps"] for s in step["skills"]]
+for s in step_skills + data.get("crossCutting", []):
+    if s["name"] in seen:
+        continue
+    seen.add(s["name"])
+    print("\t".join((s["name"], s["source"], s["path"], s["ref"])))
 PY
 )"
 
