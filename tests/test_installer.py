@@ -29,6 +29,8 @@ def manifest_skills():
     for step in data["steps"]:
         for s in step["skills"]:
             skills[s["name"]] = s
+    for s in data.get("crossCutting", []):
+        skills[s["name"]] = s
     return skills
 
 
@@ -69,9 +71,10 @@ def make_repo(tmp, files):
 
 
 def doctored_install(tmp, shared_context=None):
-    """Copy install.sh + skills into tmp, empty every step's skill list (so the
-    install is fully offline), and optionally inject a top-level sharedContext
-    block. Return the path to the copied install.sh."""
+    """Copy install.sh + skills into tmp, empty every step's skill list and the
+    cross-cutting helpers (so the install is fully offline), and optionally
+    inject a top-level sharedContext block. Return the path to the copied
+    install.sh."""
     tmp = Path(tmp)
     shutil.copy(INSTALL, tmp / "install.sh")
     (tmp / "install.sh").chmod(0o755)
@@ -80,6 +83,7 @@ def doctored_install(tmp, shared_context=None):
     data = json.loads(mpath.read_text(encoding="utf-8"))
     for step in data["steps"]:
         step["skills"] = []
+    data["crossCutting"] = []
     if shared_context is not None:
         data["sharedContext"] = shared_context
     mpath.write_text(json.dumps(data), encoding="utf-8")
@@ -180,9 +184,9 @@ class TestUnreachableSource(unittest.TestCase):
             shutil.copytree(ROOT / "skills", tmp / "skills")
             manifest_path = tmp / "skills" / "disciplined-build" / "manifest.json"
             data = json.loads(manifest_path.read_text(encoding="utf-8"))
-            for step in data["steps"]:
-                for s in step["skills"]:
-                    s["source"] = "/nonexistent/dead-repo.git"
+            step_skills = [s for step in data["steps"] for s in step["skills"]]
+            for s in step_skills + data.get("crossCutting", []):
+                s["source"] = "/nonexistent/dead-repo.git"
             manifest_path.write_text(json.dumps(data), encoding="utf-8")
 
             env = dict(os.environ, HOME=str(home))

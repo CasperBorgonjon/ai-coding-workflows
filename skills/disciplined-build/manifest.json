@@ -53,7 +53,15 @@
       "step": 4,
       "name": "Implement one slice",
       "checkpoint": "hard",
-      "skills": []
+      "skills": [
+        {
+          "name": "tdd",
+          "source": "https://github.com/mattpocock/skills",
+          "path": "skills/engineering/tdd",
+          "ref": "e3d8b735ef92ec9554b07f11f408089d81289eed",
+          "use": "drive the slice red-green-refactor"
+        }
+      ]
     },
     {
       "step": 5,
@@ -73,6 +81,29 @@
           "ref": "e3d8b735ef92ec9554b07f11f408089d81289eed"
         }
       ]
+    }
+  ],
+  "crossCutting": [
+    {
+      "name": "prototype",
+      "source": "https://github.com/mattpocock/skills",
+      "path": "skills/engineering/prototype",
+      "ref": "e3d8b735ef92ec9554b07f11f408089d81289eed",
+      "use": "explore a design before committing to it"
+    },
+    {
+      "name": "diagnose",
+      "source": "https://github.com/mattpocock/skills",
+      "path": "skills/engineering/diagnose",
+      "ref": "e3d8b735ef92ec9554b07f11f408089d81289eed",
+      "use": "a hard bug or performance regression surfaces, in any phase"
+    },
+    {
+      "name": "zoom-out",
+      "source": "https://github.com/mattpocock/skills",
+      "path": "skills/engineering/zoom-out",
+      "ref": "e3d8b735ef92ec9554b07f11f408089d81289eed",
+      "use": "step back for higher-level context, in any phase"
     }
   ]
 }

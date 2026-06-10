@@ -16,10 +16,10 @@ You are **daylight, not a cop.** You do not block anyone. You make the process �
 | 1 | Grill the idea | `grill-me` (no codebase) / `grill-with-docs` (existing) | **HARD** |
 | 2 | Produce PRD | `to-prd` | **HARD** |
 | 3 | Break into issues | `to-issues` | soft |
-| 4 | Implement one slice | (implement, human reviews) | **HARD** |
+| 4 | Implement one slice | `tdd` (implement; human reviews) | **HARD** |
 | 5 | Review + verify | `review` / `improve-codebase-architecture` | **HARD** |
 
-The skills above are declared — with source repos and pinned versions — in `manifest.json` next to this file. **If a referenced skill isn't installed, STOP. Never improvise a home-grown equivalent** — a degraded imitation is exactly the slop this workflow exists to prevent. Instead, surface the problem so the human can fix it:
+The skills above — and the cross-cutting helpers below — are declared, with source repos and pinned versions, in `manifest.json` next to this file (steps under `steps`, helpers under `crossCutting`). **If a referenced skill isn't installed, STOP. Never improvise a home-grown equivalent** — a degraded imitation is exactly the slop this workflow exists to prevent. Instead, surface the problem so the human can fix it:
 
 ```
 Missing skill: <name> (needed for step <n>: <step name>)
@@ -29,6 +29,18 @@ Install it by running, from the ai-coding-workflows repo:
 ```
 
 Then wait. Resume the step only once the skill is available.
+
+## Cross-cutting helpers
+
+Some skills don't belong to a single step — you reach for them when a situation calls, in **any phase**, then return to where you were. They are declared under `crossCutting` in `manifest.json` and installed the same pinned way; the same "missing skill → STOP, don't improvise" rule applies.
+
+| Skill | Reach for it when |
+|-------|-------------------|
+| `prototype` | You need to flesh out or sanity-check a design before committing to it (most useful around steps 1–2). |
+| `diagnose` | A hard bug or performance regression surfaces — typically while implementing (4) or verifying (5). |
+| `zoom-out` | You've lost the bigger picture and need higher-level context on how a piece fits. |
+
+Using a helper does **not** advance the workflow or satisfy a checkpoint — note it in the state file's **Notes** if it materially shaped a step, then resume the current step where you left off.
 
 ## Shared context baseline (step 1)
 

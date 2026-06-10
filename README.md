@@ -19,8 +19,10 @@ One workflow, for building a feature without slop:
 1. **Grill the idea** — interrogate the plan until it's sharp. *(hard stop)*
 2. **Produce a PRD** — turn it into a spec; narrow the too-broad first draft. *(hard stop)*
 3. **Break into issues** — mechanical once the PRD is approved.
-4. **Implement one slice** — you review each slice. *(hard stop)*
+4. **Implement one slice** — build it test-first (`tdd`); you review each slice. *(hard stop)*
 5. **Review + verify** — run it, don't just trust the tests. *(hard stop)*
+
+Alongside the steps are **cross-cutting helpers** you reach for in any phase, then return to where you were: `prototype` (flesh out a design before committing), `diagnose` (chase a hard bug or perf regression), and `zoom-out` (get higher-level context). They're declared and pinned the same way the step skills are.
 
 Progress is shown live as a map, and recorded in `.workflow/<feature>.md` — committed so the team can see what went through the workflow and what didn't. Each step links to the *real artifact* it produced (PRD, issues, PR, review output); a checkmark with no artifact is a lie.
 
@@ -45,7 +47,7 @@ Installing brings the **professional skills the workflow drives along with it** 
 
 ## Workflow manifest
 
-The workflow's dependencies are declared in one place: `skills/disciplined-build/manifest.json`. It lists the five steps in order and, for each, the checkpoint type (`hard` | `soft`) and the professional skills the step drives — each with its source repo, path, and a pinned commit SHA (the upstream publishes no tags, so a full SHA is the only real pin). A teammate can audit exactly which skill versions the team runs by reading this one file; bump a version by editing its `ref`.
+The workflow's dependencies are declared in one place: `skills/disciplined-build/manifest.json`. It lists the five steps in order and, for each, the checkpoint type (`hard` | `soft`) and the professional skills the step drives, plus a top-level `crossCutting` list of helpers reached for in any phase — each skill with its source repo, path, and a pinned commit SHA (the upstream publishes no tags, so a full SHA is the only real pin). A teammate can audit exactly which skill versions the team runs by reading this one file; bump a version by editing its `ref`.
 
 - **Format:** JSON, because the installer (bash) parses it with python3's stdlib — already a dependency via the validator — so no extra tooling. The file is small enough that JSON's verbosity doesn't hurt auditability.
 - **Consistency:** the manifest is the source of truth. The prose step table in `SKILL.md` is hand-written, and a drift test in `./test.sh` fails whenever the two disagree on step names, order, checkpoint types, or skill names.
@@ -93,11 +95,11 @@ rm -rf ~/.claude/skills/disciplined-build    # global install
 rm -rf ./.claude/skills/disciplined-build    # --project install
 ```
 
-The professional skills the installer fetched (`grill-me`, `grill-with-docs`, `to-prd`, `to-issues`, `review`, `improve-codebase-architecture`) are useful on their own, so uninstalling the workflow leaves them in place. To remove those too:
+The professional skills the installer fetched (`grill-me`, `grill-with-docs`, `to-prd`, `to-issues`, `tdd`, `review`, `improve-codebase-architecture`, and the cross-cutting `prototype`, `diagnose`, `zoom-out`) are useful on their own, so uninstalling the workflow leaves them in place. To remove those too:
 
 ```sh
 cd <skills dir>  # ~/.claude/skills or ./.claude/skills
-rm -rf grill-me grill-with-docs to-prd to-issues review improve-codebase-architecture
+rm -rf grill-me grill-with-docs to-prd to-issues tdd review improve-codebase-architecture prototype diagnose zoom-out
 ```
 
 State files already committed under `.workflow/` are part of your repo's history and are deliberately untouched — they remain readable without the skill installed.
