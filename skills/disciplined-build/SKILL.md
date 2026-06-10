@@ -19,7 +19,16 @@ You are **daylight, not a cop.** You do not block anyone. You make the process �
 | 4 | Implement one slice | (implement, human reviews) | **HARD** |
 | 5 | Review + verify | `review` / `improve-codebase-architecture` | **HARD** |
 
-If a referenced skill isn't installed, perform the equivalent work yourself and note it.
+The skills above are declared — with source repos and pinned versions — in `manifest.json` next to this file. **If a referenced skill isn't installed, STOP. Never improvise a home-grown equivalent** — a degraded imitation is exactly the slop this workflow exists to prevent. Instead, surface the problem so the human can fix it:
+
+```
+Missing skill: <name> (needed for step <n>: <step name>)
+Install it by running, from the ai-coding-workflows repo:
+  ./install.sh            # global
+  ./install.sh --project  # this repo only
+```
+
+Then wait. Resume the step only once the skill is available.
 
 ## On invocation
 
@@ -45,7 +54,7 @@ Workflow: Disciplined Build — <feature name>
 For each step, in order:
 
 1. Announce the step and re-render the map.
-2. Do the step's work (invoke the referenced skill, or perform the equivalent).
+2. Do the step's work by invoking the referenced skill. If it's missing, stop and surface the install instructions (see above) — never substitute your own version.
 3. **At a HARD checkpoint:** STOP. Show the human exactly what was produced and the artifact link/path. Ask for explicit approval before continuing. Do not proceed on silence or vague agreement — require a clear "approved" or a revision. Common failure: the first PRD/plan is always too broad. Push the human to narrow it.
 4. **At a soft step:** do it, narrate the result, update state, continue without stopping.
 5. After every step, **update the state file**: set status and fill in the artifact link to the *real thing produced* (the PRD path, the issue numbers, the branch/PR, the review output). Never mark a step done without a real artifact — a checkmark with no artifact is a lie, and the whole point of this tool is that slop becomes visible.
