@@ -45,6 +45,47 @@ def run_install(args=(), home=None, cwd=None):
     )
 
 
+def _git(args, cwd):
+    subprocess.run(["git", *args], cwd=cwd, check=True, capture_output=True, text=True)
+
+
+def make_repo(tmp, files):
+    """Create a one-commit git repo at tmp containing `files` ({relpath: text});
+    return (repo_path, commit_sha)."""
+    repo = Path(tmp)
+    _git(["init", "-q"], repo)
+    _git(["config", "user.email", "t@example.com"], repo)
+    _git(["config", "user.name", "Test"], repo)
+    for rel, content in files.items():
+        p = repo / rel
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text(content, encoding="utf-8")
+    _git(["add", "-A"], repo)
+    _git(["commit", "-qm", "fixture"], repo)
+    sha = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True, text=True
+    ).stdout.strip()
+    return repo, sha
+
+
+def doctored_install(tmp, shared_context=None):
+    """Copy install.sh + skills into tmp, empty every step's skill list (so the
+    install is fully offline), and optionally inject a top-level sharedContext
+    block. Return the path to the copied install.sh."""
+    tmp = Path(tmp)
+    shutil.copy(INSTALL, tmp / "install.sh")
+    (tmp / "install.sh").chmod(0o755)
+    shutil.copytree(ROOT / "skills", tmp / "skills")
+    mpath = tmp / "skills" / "disciplined-build" / "manifest.json"
+    data = json.loads(mpath.read_text(encoding="utf-8"))
+    for step in data["steps"]:
+        step["skills"] = []
+    if shared_context is not None:
+        data["sharedContext"] = shared_context
+    mpath.write_text(json.dumps(data), encoding="utf-8")
+    return tmp / "install.sh"
+
+
 def assert_full_install(testcase, skills_dir):
     testcase.assertTrue(
         (skills_dir / "disciplined-build" / "SKILL.md").is_file(),
@@ -155,6 +196,133 @@ class TestUnreachableSource(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("cannot fetch", result.stderr)
             self.assertIn("/nonexistent/dead-repo.git", result.stderr)
+
+
+class TestSharedContextSource(unittest.TestCase):
+    """Offline: a manifest's optional sharedContext block is fetched, pinned,
+    and landed at .workflow/shared/CONTEXT.md on a --project install. Uses a
+    local fixture git repo, so no network — skill lists are emptied too."""
+
+    GLOSSARY = "# Team Glossary\n\n**Order**: a customer's request to buy.\n"
+
+    def _tmp(self, prefix):
+        d = tempfile.mkdtemp(prefix=prefix)
+        self.addCleanup(shutil.rmtree, d, ignore_errors=True)
+        return Path(d)
+
+    def _run(self, install_sh, project, cwd):
+        return subprocess.run(
+            [str(install_sh), *(["--project"] if project else [])],
+            capture_output=True, text=True,
+            env=dict(os.environ, HOME=str(self._tmp("dw-home-"))), cwd=cwd,
+        )
+
+    def test_project_install_lands_pinned_glossary(self):
+        glossary, sha = make_repo(self._tmp("dw-glossary-"), {"CONTEXT.md": self.GLOSSARY})
+        install = doctored_install(
+            self._tmp("dw-tree-"),
+            shared_context={"source": str(glossary), "path": ".", "ref": sha},
+        )
+        proj = self._tmp("dw-proj-")
+        result = self._run(install, project=True, cwd=proj)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        ctx = proj / ".workflow" / "shared" / "CONTEXT.md"
+        self.assertTrue(ctx.is_file(), "shared CONTEXT.md not landed")
+        self.assertEqual(ctx.read_text(encoding="utf-8"), self.GLOSSARY)
+        self.assertEqual(
+            (proj / ".workflow" / "shared" / ".pinned-ref").read_text().strip(),
+            sha, "shared context not pinned to the manifest's ref",
+        )
+
+    def test_glossary_in_a_subdirectory(self):
+        glossary, sha = make_repo(
+            self._tmp("dw-glossary-"), {"vocab/CONTEXT.md": self.GLOSSARY}
+        )
+        install = doctored_install(
+            self._tmp("dw-tree-"),
+            shared_context={"source": str(glossary), "path": "vocab", "ref": sha},
+        )
+        proj = self._tmp("dw-proj-")
+        result = self._run(install, project=True, cwd=proj)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            (proj / ".workflow" / "shared" / "CONTEXT.md").read_text(encoding="utf-8"),
+            self.GLOSSARY,
+        )
+
+    def test_no_shared_context_key_installs_unchanged(self):
+        install = doctored_install(self._tmp("dw-tree-"), shared_context=None)
+        proj = self._tmp("dw-proj-")
+        result = self._run(install, project=True, cwd=proj)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(
+            (proj / ".workflow").exists(),
+            "no sharedContext key must not create .workflow/shared",
+        )
+
+    def test_global_install_skips_shared_context_cleanly(self):
+        glossary, sha = make_repo(self._tmp("dw-glossary-"), {"CONTEXT.md": self.GLOSSARY})
+        install = doctored_install(
+            self._tmp("dw-tree-"),
+            shared_context={"source": str(glossary), "path": ".", "ref": sha},
+        )
+        cwd = self._tmp("dw-cwd-")
+        result = self._run(install, project=False, cwd=cwd)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(
+            (cwd / ".workflow").exists(),
+            "global install must not write a project .workflow/",
+        )
+        self.assertIn("skipped", result.stdout)
+
+    def test_rerun_replaces_glossary_wholesale(self):
+        glossary, sha = make_repo(self._tmp("dw-glossary-"), {"CONTEXT.md": self.GLOSSARY})
+        install = doctored_install(
+            self._tmp("dw-tree-"),
+            shared_context={"source": str(glossary), "path": ".", "ref": sha},
+        )
+        proj = self._tmp("dw-proj-")
+        self.assertEqual(self._run(install, project=True, cwd=proj).returncode, 0)
+        # Plant a stale file that the source does not contain, then re-run.
+        stale = proj / ".workflow" / "shared" / "STALE.md"
+        stale.write_text("left over from a previous pin", encoding="utf-8")
+        result = self._run(install, project=True, cwd=proj)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(stale.exists(), "stale file survived a re-install (not wholesale)")
+        self.assertTrue((proj / ".workflow" / "shared" / "CONTEXT.md").is_file())
+
+    def test_missing_required_key_fails_cleanly(self):
+        glossary, _ = make_repo(self._tmp("dw-glossary-"), {"CONTEXT.md": self.GLOSSARY})
+        install = doctored_install(
+            self._tmp("dw-tree-"),
+            shared_context={"source": str(glossary), "path": "."},  # no "ref"
+        )
+        result = self._run(install, project=True, cwd=self._tmp("dw-proj-"))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("missing required key", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)  # clean message, not a stacktrace
+
+    def test_missing_context_md_fails_loudly(self):
+        repo, sha = make_repo(self._tmp("dw-glossary-"), {"README.md": "no glossary here"})
+        install = doctored_install(
+            self._tmp("dw-tree-"),
+            shared_context={"source": str(repo), "path": ".", "ref": sha},
+        )
+        result = self._run(install, project=True, cwd=self._tmp("dw-proj-"))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("no CONTEXT.md", result.stderr)
+
+    def test_invalid_ref_fails_loudly(self):
+        glossary, _ = make_repo(self._tmp("dw-glossary-"), {"CONTEXT.md": self.GLOSSARY})
+        bad = "0" * 40
+        install = doctored_install(
+            self._tmp("dw-tree-"),
+            shared_context={"source": str(glossary), "path": ".", "ref": bad},
+        )
+        result = self._run(install, project=True, cwd=self._tmp("dw-proj-"))
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("shared context", result.stderr)
+        self.assertIn(bad, result.stderr)
 
 
 if __name__ == "__main__":

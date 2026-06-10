@@ -14,8 +14,10 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 MANIFEST="$ROOT/skills/disciplined-build/manifest.json"
 
 DEST="$HOME/.claude/skills"
+PROJECT_DIR=""
 if [[ "${1:-}" == "--project" ]]; then
   DEST="$(pwd)/.claude/skills"
+  PROJECT_DIR="$(pwd)"
 fi
 
 for tool in git tar; do
@@ -81,6 +83,51 @@ while IFS=$'\t' read -r name source path ref; do
   printf '%s\n' "$ref" > "$DEST/$name/.pinned-ref"
   echo "  pinned $name @ ${ref:0:12}  ($source)"
 done <<< "$DEPS"
+
+# --- 3. the shared context source (optional, project-scoped) ---
+# A workflow may inherit one team glossary: a CONTEXT.md fetched from a pinned
+# git repo, declared as a top-level "sharedContext" block in the manifest:
+#   "sharedContext": { "source": <git url>, "path": <dir holding CONTEXT.md>, "ref": <full SHA> }
+# It lands in the *project* at .workflow/shared/CONTEXT.md (pinned, read-only) —
+# never in the skills dir. It is only meaningful against a specific codebase, so
+# it is fetched on a --project install and skipped (cleanly, not an error) on a
+# bare global install. A manifest with no sharedContext key behaves as before.
+CTX="$("$PYTHON" - "$MANIFEST" <<'PY'
+import json, sys
+c = json.load(open(sys.argv[1])).get("sharedContext")
+if c:
+    missing = [k for k in ("source", "ref") if not c.get(k)]
+    if missing:
+        sys.exit("error: sharedContext is missing required key(s): " + ", ".join(missing))
+    print("\t".join((c["source"], c.get("path", "."), c["ref"])))
+PY
+)"
+
+if [[ -n "$CTX" ]]; then
+  if [[ -z "$PROJECT_DIR" ]]; then
+    echo "  shared context declared — skipped (no project; re-run with --project inside a repo)"
+  else
+    IFS=$'\t' read -r c_source c_path c_ref <<< "$CTX"
+    repo="$(repo_for "$c_source")"
+    git -C "$repo" cat-file -e "$c_ref^{commit}" 2>/dev/null || {
+      echo "error: pinned ref $c_ref for shared context not found in $c_source" >&2
+      exit 1
+    }
+    extract="$CACHE/extract-shared-context"
+    mkdir -p "$extract"
+    git -C "$repo" archive "$c_ref" -- "$c_path" | tar -x -C "$extract"
+    [[ -f "$extract/$c_path/CONTEXT.md" ]] || {
+      echo "error: no CONTEXT.md at $c_path in $c_source@$c_ref (shared context)" >&2
+      exit 1
+    }
+    shared="$PROJECT_DIR/.workflow/shared"
+    rm -rf "${shared:?}"  # guard: never rm -rf an empty path (mirrors the skill loop)
+    mkdir -p "$shared"
+    cp "$extract/$c_path/CONTEXT.md" "$shared/CONTEXT.md"
+    printf '%s\n' "$c_ref" > "$shared/.pinned-ref"
+    echo "  pinned shared context @ ${c_ref:0:12}  ($c_source)"
+  fi
+fi
 
 echo "Installed disciplined-build + manifest-declared skills into: $DEST"
 echo "Start a feature in Claude Code with the 'disciplined-build' skill."
