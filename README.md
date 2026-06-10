@@ -31,6 +31,8 @@ Progress is shown live as a map, and recorded in `.workflow/<feature>.md` — co
 ./install.sh --project  # installs into ./.claude/skills (this repo only)
 ```
 
+Installing brings the **professional skills the workflow drives along with it** — fetched from their source repos at the exact commits pinned in the [manifest](#workflow-manifest), never "latest". Re-running is safe and idempotent; if a source is unreachable, the install fails loudly rather than leaving you with a silent partial setup. Requires `git` and `python3`.
+
 ## Workflow manifest
 
 The workflow's dependencies are declared in one place: `skills/disciplined-build/manifest.json`. It lists the five steps in order and, for each, the checkpoint type (`hard` | `soft`) and the professional skills the step drives — each with its source repo, path, and a pinned commit SHA (the upstream publishes no tags, so a full SHA is the only real pin). A teammate can audit exactly which skill versions the team runs by reading this one file; bump a version by editing its `ref`.
@@ -58,6 +60,13 @@ Trying this should cost five minutes; leaving should cost five seconds. One comm
 ```sh
 rm -rf ~/.claude/skills/disciplined-build    # global install
 rm -rf ./.claude/skills/disciplined-build    # --project install
+```
+
+The professional skills the installer fetched (`grill-me`, `grill-with-docs`, `to-prd`, `to-issues`, `review`, `improve-codebase-architecture`) are useful on their own, so uninstalling the workflow leaves them in place. To remove those too:
+
+```sh
+cd <skills dir>  # ~/.claude/skills or ./.claude/skills
+rm -rf grill-me grill-with-docs to-prd to-issues review improve-codebase-architecture
 ```
 
 State files already committed under `.workflow/` are part of your repo's history and are deliberately untouched — they remain readable without the skill installed.
